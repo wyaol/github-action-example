@@ -1,8 +1,0 @@
-version: '3'
-services:
-  web:
-    build: .
-    image: github-action-example
-    container_name: github-action-example
-    ports:
-    - 3015:3015
