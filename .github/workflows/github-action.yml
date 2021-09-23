@@ -1,0 +1,42 @@
+name: My Workflow
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  push-to-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Push
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          source: .
+          target: /home/workplace/github-action-example/
+
+  docker-run:
+    needs: push-to-server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker Run
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          command_timeout: 20m
+          script: |
+            cd /home/workplace/github-action-example/
+            sh opt.sh stop github-action-example
+            sh opt.sh kill_by_port 3015
+            sh opt.sh delete_container github-action-example
+            sh opt.sh delete_image github-action-example
+            docker-compose up -d
+            cd ..
+            rm -rf /home/workplace/github-action-example/
